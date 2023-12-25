@@ -5,13 +5,11 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
-import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.widget.Button
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
@@ -20,7 +18,11 @@ import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import dev.nanid.selfcare.databinding.ActivityMainBinding
+
+import kotlin.random.Random
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,24 +51,39 @@ class MainActivity : AppCompatActivity() {
 
         //notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val btn = findViewById<Button>(R.id.button)
+        val titles: Array<String> = resources.getStringArray(R.array.notification_titles)
         btn.setOnClickListener {
+            var rnd = Random
+            var num = rnd.nextInt(0,titles.size)
+            postNotification(titles[num],"")
             btn.text = "wowi"
-            notifyIn()
+
         }
     }
+
     //----------- own shit from here ----------
-    fun notifyIn(){
+
+    fun empty(): PendingIntent? {
+
+        return null
+    }
+
+    fun postNotification(notificationTitel: String,notificationContent: String){
         if (Build.VERSION.SDK_INT >= 26) {
             val channel = NotificationChannel(channelId , "Your channel name", NotificationManager.IMPORTANCE_DEFAULT)
             NotificationManagerCompat.from(this).createNotificationChannel(channel)
         }
+        // todo -> action for buttons on notification
+
         var builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("My notification")
-            .setContentText("Much longer text that cannot fit one line...")
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText("Much longer text that cannot fit one line..."))
+            .setContentTitle(notificationTitel)
+            .addAction(com.google.android.material.R.drawable.navigation_empty_icon,":D",empty())
+            .addAction(com.google.android.material.R.drawable.navigation_empty_icon, "._.",empty())
+            .addAction(com.google.android.material.R.drawable.navigation_empty_icon, ":c",empty())
+            .setContentText(notificationContent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setAutoCancel(true)
 
         if (ActivityCompat.checkSelfPermission(
                 this,
