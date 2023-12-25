@@ -6,4 +6,17 @@
     android:layout_height="match_parent"
     tools:context=".ui.home.HomeFragment"
     android:theme="@style/Theme.Material3.Dark"
-    />
+    >
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="132dp"
+        android:layout_height="61dp"
+        android:text="Button"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.313" />
+</androidx.constraintlayout.widget.ConstraintLayout>
