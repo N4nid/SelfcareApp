@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import dev.nanid.selfcare.MainActivity
@@ -44,14 +45,43 @@ class HomeFragment : Fragment() {
             mood = sharedPreference.getString("nInput","mood")
         }catch (e: Exception){
             Log.wtf("y00oo..",e)
-            mood = "3R0R"
+            mood = ":c"
         }
 
         val btn = root.findViewById<Button>(R.id.button)
-        btn.setText(mood)
-        btn.setOnClickListener {
+        btn.setText("Mood "+mood)
 
-            btn.text = "sent"
+        val tvBody = root.findViewById<TextView>(R.id.tvBody)
+        val tvTitle = root.findViewById<TextView>(R.id.tvTitle)
+        val titles: Array<String> = resources.getStringArray(R.array.tvTitle)
+        val info: Array<String> = resources.getStringArray(R.array.info)
+
+        //---- logic for the core feature duuhhh ----
+        if(mood == ":)"){
+            btn.setBackgroundColor(getResources().getColor(R.color.good))
+            tvTitle.setText(titles[0])
+            tvBody.setText(info[0])
+        }
+        else if(mood == ":|") {
+            btn.setBackgroundColor(getResources().getColor(R.color.mid))
+            tvTitle.setText(titles[1])
+            tvBody.setText(info[1])
+        }
+        else if(mood == ":(") {
+            btn.setBackgroundColor(getResources().getColor(R.color.bad))
+            tvTitle.setText(titles[2])
+            tvBody.setText(info[2])
+        }
+        else{
+            btn.setText("Mood :3")
+            btn.setBackgroundColor(getResources().getColor(R.color.teal_700))
+            tvTitle.setText("Selfcare Info")
+            tvBody.setText("wow solch leer ._.")
+
+        }
+
+        btn.setOnClickListener {
+            btn.text = "Mood :D"
 
             val service: Intent = Intent(
                 context,
@@ -59,7 +89,7 @@ class HomeFragment : Fragment() {
             )
             service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             requireActivity().startService(service)
-
+            //main.finish()
         }
 
         return root

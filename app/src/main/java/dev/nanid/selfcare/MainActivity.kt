@@ -2,6 +2,7 @@ package dev.nanid.selfcare
 
 import android.Manifest
 import android.app.ActivityManager
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -18,6 +19,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.SystemClock
 import android.provider.Settings
 import android.widget.Button
 import android.widget.Toast
@@ -26,6 +28,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
+import androidx.core.view.children
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -74,6 +77,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val intentFilter = IntentFilter("dev.nanid.endAction")
+        //create and register receiver
+        broadcastReceiver = endReceiver()
+        registerReceiver(broadcastReceiver, intentFilter)
 
     }
 
@@ -90,6 +97,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    fun SetAlarm() {
+        val receiver: BroadcastReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context,intent: Intent) {
+                val service: Intent = Intent(
+                    context,
+                    bgService::class.java
+                )
+                service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startService(service)
+                context.unregisterReceiver(this) // this == BroadcastReceiver, not Activity
+            }
+        }
+        registerReceiver(receiver, IntentFilter("dev.nanid.notify"))
+        val pintent = PendingIntent.getBroadcast(this, 0, Intent("dev.nanid.notify"), PendingIntent.FLAG_IMMUTABLE)
+        val manager = getSystemService(ALARM_SERVICE) as AlarmManager
+
+        // set alarm to fire 5 sec (1000*5) from now (SystemClock.elapsedRealtime())
+        manager[AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 1000 * 1] =
+            pintent
+    }
+
     /* good stuff
     private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
         val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
@@ -101,7 +129,17 @@ class MainActivity : AppCompatActivity() {
         return false
     }*/
 
-
+    inner class endReceiver: BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            var intent = Intent("dev.nanid.moodAction")
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            sendBroadcast(intent)
+            unregisterReceiver(broadcastReceiver)
+            //Toast.makeText(context,"send",Toast.LENGTH_SHORT).show()
+            finish()
+            System.exit( 0 )
+        }
+    }
 
 }
 
@@ -112,26 +150,34 @@ class bgService : Service() {
 
     inner class ActionReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-
-            val mood = intent.getStringExtra("mood")
-            val sharedPreference = context.getSharedPreferences("notification",Context.MODE_PRIVATE)
-            val editor = sharedPreference.edit()
-            //editor.remove("nInput")
-            editor.putString("nInput",mood)
-            editor.apply()
-
-            Toast.makeText(context,mood,Toast.LENGTH_LONG).show()
-
-            val intent = Intent()
-            intent.setClass(context,MainActivity::class.java)
+            var endIntent = Intent("dev.nanid.endAction")
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            sendBroadcast(endIntent)
 
-            val notificationManager =
-                applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(1234)
+            if(intent.hasExtra("mood")){
+                val mood = intent.getStringExtra("mood")
+                val sharedPreference =
+                    context.getSharedPreferences("notification", Context.MODE_PRIVATE)
+                val editor = sharedPreference.edit()
+                //editor.remove("nInput")
+                editor.putString("nInput", mood)
+                editor.apply()
 
-            stopSelf()
+                Toast.makeText(context,mood,Toast.LENGTH_SHORT).show()
+
+                val notificationManager =
+                    applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+                notificationManager.cancel(1234)
+
+            }else{
+                val startIntent = Intent()
+                startIntent.setClass(context,MainActivity::class.java)
+                startIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(startIntent)
+
+                //Toast.makeText(context,"yay",Toast.LENGTH_SHORT).show()
+                stopSelf()
+            }
 
         }
     }

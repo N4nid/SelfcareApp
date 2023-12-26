@@ -4,19 +4,93 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment"
     android:theme="@style/Theme.Material3.Dark"
-    >
+    tools:context=".ui.home.HomeFragment">
 
     <Button
         android:id="@+id/button"
-        android:layout_width="193dp"
-        android:layout_height="68dp"
-        android:text="Button"
+        android:layout_width="154dp"
+        android:layout_height="48dp"
+        android:text="Mood :3"
+        android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.073"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.313" />
+        app:layout_constraintVertical_bias="0.023"
+        app:rippleColor="?attr/colorOnPrimary" />
+
+    <TextView
+        android:id="@+id/tvBody"
+        android:layout_width="365dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="0dp"
+        android:background="@drawable/bottom_rounded"
+        android:fadingEdge="horizontal|vertical"
+        android:padding="15dp"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/tvTitle"
+        app:layout_constraintStart_toStartOf="@+id/tvTitle"
+        app:layout_constraintTop_toBottomOf="@+id/tvTitle"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="365dp"
+        android:layout_height="52dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/top_rounded"
+        android:backgroundTint="?attr/colorOnPrimaryFixed"
+        android:backgroundTintMode="add"
+        android:padding="10dp"
+        android:text="@string/app_name"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.347"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.132" />
+
+    <EditText
+        android:id="@+id/textfield"
+        android:layout_width="365dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginTop="64dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded"
+        android:backgroundTint="#090909"
+        android:backgroundTintMode="add"
+        android:editable="true"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="..."
+        android:inputType="textMultiLine"
+        android:padding="12dp"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="400dp"
+        app:layout_constraintHorizontal_bias="0.413"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvBody"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:text="Save"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/textfield"
+        app:layout_constraintEnd_toEndOf="@+id/textfield"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/textfield"
+        app:layout_constraintTop_toBottomOf="@+id/tvBody"
+        app:layout_constraintVertical_bias="1.0" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,9 +5,8 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/cardview_dark_background"
-    android:theme="@style/Theme.Material3.Dark"
-    >
+    android:background="?android:attr/windowBackground"
+    android:theme="@style/Theme.Material3.Dark">
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/nav_view"

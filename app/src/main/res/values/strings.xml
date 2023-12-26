@@ -3,7 +3,18 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
-    <string name="test">._.</string>
+    <array name="tvTitle">
+        <item>Gut / Sehr gut</item>
+        <item>Ok</item>
+        <item>Schlecht / Sehr schlecht</item>
+    </array>
+
+    <array name="info">
+        <item>Warum fühlst du dich gut?\nWofür bist du dankbar?</item>
+        <item>Was ist gut? \nWas kannst du tun um dich besser zu fühlen? \nWas brauchst du gerade?</item>
+        <item>Mögliche Ideen was man tun könnte:\n\nWasser trinken, heiße Dusche, was essen, rausgehen, nap, etc</item>
+    </array>
+
     <array name="notification_titles">
         <item>Wie geht es dir gerade?</item>
         <item>Alles gut bei dir?</item>
