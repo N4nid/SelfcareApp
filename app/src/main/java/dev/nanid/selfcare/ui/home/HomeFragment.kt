@@ -1,17 +1,26 @@
 package dev.nanid.selfcare.ui.home
 
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import dev.nanid.selfcare.MainActivity
+import dev.nanid.selfcare.R
+import dev.nanid.selfcare.bgService
 import dev.nanid.selfcare.databinding.FragmentHomeBinding
+
 
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
+    private var main = MainActivity()
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -29,8 +38,33 @@ class HomeFragment : Fragment() {
         val root: View = binding.root
 
 
+        var mood:String?
+        try {
+            val sharedPreference = requireActivity().getSharedPreferences("notification", Context.MODE_PRIVATE)
+            mood = sharedPreference.getString("nInput","mood")
+        }catch (e: Exception){
+            Log.wtf("y00oo..",e)
+            mood = "3R0R"
+        }
+
+        val btn = root.findViewById<Button>(R.id.button)
+        btn.setText(mood)
+        btn.setOnClickListener {
+
+            btn.text = "sent"
+
+            val service: Intent = Intent(
+                context,
+                bgService::class.java
+            )
+            service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            requireActivity().startService(service)
+
+        }
+
         return root
     }
+
 
 
     override fun onDestroyView() {

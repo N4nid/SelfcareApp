@@ -3,6 +3,7 @@
     <string name="title_home">Home</string>
     <string name="title_dashboard">Dashboard</string>
     <string name="title_notifications">Notifications</string>
+    <string name="test">._.</string>
     <array name="notification_titles">
         <item>Wie geht es dir gerade?</item>
         <item>Alles gut bei dir?</item>
