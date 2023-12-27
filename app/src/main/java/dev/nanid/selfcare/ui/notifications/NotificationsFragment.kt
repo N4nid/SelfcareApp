@@ -46,6 +46,7 @@ class NotificationsFragment : Fragment() {
 
         val amount = root.findViewById<EditText>(R.id.editTextNumber2)
         val remindSwitcher = root.findViewById<Button>(R.id.button2)
+        val intervalType = root.findViewById<ToggleButton>(R.id.switchTime) //checked(true) = day ; false = hours
 
         val sharedPreferences = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE)
         var reminding = false
@@ -55,6 +56,7 @@ class NotificationsFragment : Fragment() {
             var time = sharedPreferences.getInt("time",-1)
             amount.setText(time.toString())
             if (time == -1)amount.setText("")
+            intervalType.isChecked = sharedPreferences.getBoolean("TypeIsDay",false)
 
             if(reminding){
                 remindSwitcher.setText("Stop reminding")
@@ -72,6 +74,7 @@ class NotificationsFragment : Fragment() {
         remindSwitcher.setOnClickListener {
             //val editor = sharedPreferences.edit()
             if (reminding){
+                reminding = false
                 remindSwitcher.setText("Start reminding")
                 val editor = sharedPreferences.edit()
                 //editor.remove("nInput")
@@ -80,26 +83,28 @@ class NotificationsFragment : Fragment() {
 
                 var intent = Intent("dev.nanid.notify")
                 intent.putExtra("stop",true)
-                //intent.putExtra("repeating",repeating)
+
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 (activity as MainActivity).sendBroadcast(intent)
 
                 Toast.makeText(context,"stopped",Toast.LENGTH_SHORT).show()
             }else{
                 val time:Int
-
+                reminding = true
                 try {
                     time = amount.text.toString().toInt()
+                    if (time < 1) throw Exception("input to low")
 
                     remindSwitcher.setText("Stop reminding")
                     val editor = sharedPreferences.edit()
                     editor.putInt("time",time)
+                    editor.putBoolean("TypeIsDay",intervalType.isChecked)
                     editor.putBoolean("reminding", true)
                     editor.apply()
 
                     var intent = Intent("dev.nanid.notify")
                     intent.putExtra("alarm",time)
-                    //intent.putExtra("repeating",repeating)
+                    intent.putExtra("type",intervalType.isChecked)
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     (activity as MainActivity).sendBroadcast(intent)
 

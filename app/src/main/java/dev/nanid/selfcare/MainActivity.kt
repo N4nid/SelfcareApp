@@ -94,7 +94,7 @@ class MainActivity : AppCompatActivity() {
                 this,
                 notiService::class.java
             )
-            Toast.makeText(this,"started",Toast.LENGTH_SHORT).show()
+            //Toast.makeText(this,"started",Toast.LENGTH_SHORT).show()
             service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startService(service)
         }
@@ -137,6 +137,7 @@ class MainActivity : AppCompatActivity() {
         override fun onReceive(context: Context, intent: Intent) {
             var intent = Intent("dev.nanid.moodAction")
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            intent.putExtra("received",true)
             sendBroadcast(intent)
             unregisterReceiver(broadcastReceiver)
             //Toast.makeText(context,"send",Toast.LENGTH_SHORT).show()
@@ -159,7 +160,7 @@ class notiService : Service() {
 
             if(intent.hasExtra("alarm") ){//&& intent.hasExtra("repeating")
 
-                SetAlarm(intent.getIntExtra("alarm",0))
+                SetAlarm(intent.getIntExtra("alarm",1),intent.getBooleanExtra("type",false))
                 Toast.makeText(context,"reminder set",Toast.LENGTH_SHORT).show()
                 //Toast.makeText(context,"yayo ",Toast.LENGTH_SHORT).show()
             }else if(intent.hasExtra("stop")){
@@ -173,7 +174,7 @@ class notiService : Service() {
                 startService(service)
 
                 if (intent.hasExtra("time")){
-                    SetAlarm(intent.getIntExtra("time",0))
+                    SetAlarm(intent.getIntExtra("time",1),intent.getBooleanExtra("type",false))
                 }
 
             }
@@ -189,19 +190,21 @@ class notiService : Service() {
 
         }
     }
-    fun SetAlarm(time:Int) {
+    fun SetAlarm(time:Int,isDay:Boolean) {
         stopAlarm()
 
         val intent = Intent("dev.nanid.notify")
         intent.putExtra("time",time)
+        intent.putExtra("type",isDay)
         pintent = PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
         //cancel alarm??
         manager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        manager!!.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis()+ 1000 * time,pintent!!)
+        var interval: Int
+        if(isDay) interval = AlarmManager.INTERVAL_HOUR.toInt() * time  //(time * 1000*60).toInt() //
+        else interval = AlarmManager.INTERVAL_DAY.toInt() * time  //(time * 1000).toInt()//
 
-
-
+        manager!!.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis() + interval ,pintent!!)
     }
 
     override fun onDestroy() {
@@ -277,9 +280,11 @@ class bgService : Service() {
                     startApp(context)
                 }
 
-            }else{
+            } else if(intent.hasExtra("received")){
                 startApp(context)
             }
+
+
 
         }
     }
@@ -352,6 +357,7 @@ class bgService : Service() {
             pIntents += notificationAction(moods[i])
         }
 
+
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground) //todo make notification icon
             .setContentTitle(notificationTitel)
@@ -361,6 +367,7 @@ class bgService : Service() {
             .addAction(R.drawable.ic_dashboard_black_24dp, moods[2],pIntents[2])
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setOngoing(true)
+
 
         val n: Notification = builder.build()
         return n
