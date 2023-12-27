@@ -4,8 +4,11 @@ package dev.nanid.selfcare.ui.notifications
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
+import android.os.Build
 
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 
 import android.view.LayoutInflater
@@ -23,6 +26,7 @@ import dev.nanid.selfcare.MainActivity
 import dev.nanid.selfcare.R
 
 import dev.nanid.selfcare.databinding.FragmentNotificationsBinding
+import dev.nanid.selfcare.notiService
 import java.lang.Exception
 
 
@@ -46,32 +50,49 @@ class NotificationsFragment : Fragment() {
 
         val amount = root.findViewById<EditText>(R.id.editTextNumber2)
         val remindSwitcher = root.findViewById<Button>(R.id.button2)
+        val intervalType = root.findViewById<ToggleButton>(R.id.switchTime) //checked(true) = day ; false = hours
+        val settings = root.findViewById<Button>(R.id.button3)
 
         val sharedPreferences = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE)
-        var reminding = false
+        //var reminding = false
+        var serviceUp = (activity as MainActivity).isMyServiceRunning(notiService::class.java)
 
         try {
-            reminding = sharedPreferences.getBoolean("reminding",false)
+            //reminding = sharedPreferences.getBoolean("reminding",false)
             var time = sharedPreferences.getInt("time",-1)
             amount.setText(time.toString())
             if (time == -1)amount.setText("")
+            intervalType.isChecked = sharedPreferences.getBoolean("TypeIsDay",false)
 
-            if(reminding){
+
+
+            if(serviceUp){
                 remindSwitcher.setText("Stop reminding")
             }else{
                 remindSwitcher.setText("Start reminding")
             }
 
         }catch (e: Exception){
-            remindSwitcher.setText("Stop reminding")
+            remindSwitcher.setText("Stop reminding.")
             Log.wtf("y00oo..",e)
         }
 
 
+        settings.setOnClickListener{
+
+            val intent: Intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, "dev.nanid.selfcare")
+              //  .putExtra(Settings.EXTRA_CHANNEL_ID, "nanid.selfcare.hideMe")
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            (activity as MainActivity).startActivity(intent)
+            //Toast.makeText(context,"woow",Toast.LENGTH_SHORT).show()
+            //startActivityForResult(intent,101)
+        }
 
         remindSwitcher.setOnClickListener {
             //val editor = sharedPreferences.edit()
-            if (reminding){
+            if (serviceUp){
+                serviceUp = false
                 remindSwitcher.setText("Start reminding")
                 val editor = sharedPreferences.edit()
                 //editor.remove("nInput")
@@ -80,7 +101,7 @@ class NotificationsFragment : Fragment() {
 
                 var intent = Intent("dev.nanid.notify")
                 intent.putExtra("stop",true)
-                //intent.putExtra("repeating",repeating)
+
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 (activity as MainActivity).sendBroadcast(intent)
 
@@ -89,22 +110,36 @@ class NotificationsFragment : Fragment() {
                 val time:Int
 
                 try {
-                    time = amount.text.toString().toInt()
+                    if(! (activity as MainActivity).isMyServiceRunning(notiService::class.java)){ //TODO rename notiService and bgService to cause less confusion
+                        val service = Intent(
+                            context,
+                            notiService::class.java
+                        )
+                        //Toast.makeText(context,"started",Toast.LENGTH_SHORT).show()
+                        service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        (activity as MainActivity).startService(service)
+                    }
 
-                    remindSwitcher.setText("Stop reminding")
+                    time = amount.text.toString().toInt()
+                    if (time < 1) throw Exception("input to low")
+
+
                     val editor = sharedPreferences.edit()
                     editor.putInt("time",time)
+                    editor.putBoolean("TypeIsDay",intervalType.isChecked)
                     editor.putBoolean("reminding", true)
                     editor.apply()
 
+                    serviceUp = true
+                    remindSwitcher.setText("Stop reminding")
                     var intent = Intent("dev.nanid.notify")
                     intent.putExtra("alarm",time)
-                    //intent.putExtra("repeating",repeating)
+                    intent.putExtra("type",intervalType.isChecked)
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     (activity as MainActivity).sendBroadcast(intent)
 
                 }catch (e:Exception){
-                    Toast.makeText(context,"input time",Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context,e.toString(),Toast.LENGTH_SHORT).show() // change to "input time"
                 }
             }
         }

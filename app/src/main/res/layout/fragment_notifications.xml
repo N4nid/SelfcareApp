@@ -12,6 +12,7 @@
         android:id="@+id/imageView"
         android:layout_width="365dp"
         android:layout_height="237dp"
+        android:background="@drawable/rounded"
         android:foreground="@drawable/bottom_rounded"
         android:src="@drawable/rounded"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -64,7 +65,11 @@
         android:background="@drawable/rounded"
         android:backgroundTint="?attr/colorPrimaryContainer"
         android:backgroundTintMode="add"
+        android:checked="false"
         android:text="ToggleButton"
+        android:textAllCaps="false"
+        android:textOff="Hours"
+        android:textOn="Days"
         android:textSize="18sp"
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
@@ -77,12 +82,33 @@
         android:id="@+id/button2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@drawable/rounded"
+        android:backgroundTint="?attr/colorPrimaryContainer"
+        android:backgroundTintMode="add"
         android:text="Stop reminding"
+        android:textAllCaps="false"
+
         app:layout_constraintBottom_toBottomOf="@+id/imageView"
         app:layout_constraintEnd_toEndOf="@+id/imageView"
         app:layout_constraintHorizontal_bias="0.931"
         app:layout_constraintStart_toStartOf="@+id/imageView"
         app:layout_constraintTop_toTopOf="@+id/imageView"
         app:layout_constraintVertical_bias="0.941" />
+
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="wrap_content"
+        android:layout_height="47dp"
+        android:background="@drawable/rounded"
+        android:backgroundTintMode="screen"
+        android:text="Settings"
+        android:textAllCaps="false"
+        android:theme="@style/Theme.Selfcare"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView"
+        app:layout_constraintEnd_toStartOf="@+id/button2"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/editTextNumber2"
+        app:layout_constraintTop_toTopOf="@+id/imageView"
+        app:layout_constraintVertical_bias="0.942" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
