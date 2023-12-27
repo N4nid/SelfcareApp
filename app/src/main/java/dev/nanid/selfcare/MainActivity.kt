@@ -12,23 +12,19 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
-import android.os.SystemClock
 import android.provider.Settings
-import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
-import androidx.core.view.children
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
@@ -60,6 +56,21 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
 
+
+        val sharedPreference =
+            getSharedPreferences("setup", Context.MODE_PRIVATE)
+
+
+        if (!sharedPreference.getBoolean("didNotiSettings",false)){
+            val editor = sharedPreference.edit()
+            editor.putBoolean("didNotiSettings",true)
+            editor.apply()
+            val intent: Intent = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, "dev.nanid.selfcare")
+                .putExtra(Settings.EXTRA_CHANNEL_ID, "nanid.selfcare.hideMe")
+            startActivity(intent)
+        }
+
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
@@ -76,6 +87,18 @@ class MainActivity : AppCompatActivity() {
                 startActivityForResult(intent, 101)
             }
         }
+
+        if(! isMyServiceRunning(notiService::class.java)){
+
+            val service = Intent(
+                this,
+                notiService::class.java
+            )
+            Toast.makeText(this,"started",Toast.LENGTH_SHORT).show()
+            service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startService(service)
+        }
+
 
         val intentFilter = IntentFilter("dev.nanid.endAction")
         //create and register receiver
@@ -97,29 +120,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun SetAlarm() {
-        val receiver: BroadcastReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context,intent: Intent) {
-                val service: Intent = Intent(
-                    context,
-                    bgService::class.java
-                )
-                service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                startService(service)
-                context.unregisterReceiver(this) // this == BroadcastReceiver, not Activity
-            }
-        }
-        registerReceiver(receiver, IntentFilter("dev.nanid.notify"))
-        val pintent = PendingIntent.getBroadcast(this, 0, Intent("dev.nanid.notify"), PendingIntent.FLAG_IMMUTABLE)
-        val manager = getSystemService(ALARM_SERVICE) as AlarmManager
 
-        // set alarm to fire 5 sec (1000*5) from now (SystemClock.elapsedRealtime())
-        manager[AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 1000 * 1] =
-            pintent
-    }
 
-    /* good stuff
-    private fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
+
+    fun isMyServiceRunning(serviceClass: Class<*>): Boolean {
         val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
         for (service in manager.getRunningServices(Int.MAX_VALUE)) {
             if (serviceClass.name == service.service.className) {
@@ -127,7 +131,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return false
-    }*/
+    }
 
     inner class endReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -143,6 +147,106 @@ class MainActivity : AppCompatActivity() {
 
 }
 
+
+// ------- Notification service --------
+class notiService : Service() {
+    var broadcastReceiver: BroadcastReceiver? = null
+    private val channelId = "nanid.selfcare.hideMe"
+    var manager: AlarmManager? = null
+    var pintent: PendingIntent? = null
+    inner class notiReceiver: BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+
+            if(intent.hasExtra("alarm") ){//&& intent.hasExtra("repeating")
+
+                SetAlarm(intent.getIntExtra("alarm",0))
+                Toast.makeText(context,"reminder set",Toast.LENGTH_SHORT).show()
+                //Toast.makeText(context,"yayo ",Toast.LENGTH_SHORT).show()
+            }else if(intent.hasExtra("stop")){
+                stopAlarm()
+            }else{
+                val service: Intent = Intent(
+                    context,
+                    bgService::class.java
+                )
+                service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startService(service)
+
+                if (intent.hasExtra("time")){
+                    SetAlarm(intent.getIntExtra("time",0))
+                }
+
+            }
+
+        }
+    }
+
+    fun stopAlarm(){
+        try {
+            manager!!.cancel(pintent!!)
+            pintent!!.cancel()
+        }catch (e:Exception){
+
+        }
+    }
+    fun SetAlarm(time:Int) {
+        stopAlarm()
+
+        val intent = Intent("dev.nanid.notify")
+        intent.putExtra("time",time)
+        pintent = PendingIntent.getBroadcast(this, System.currentTimeMillis().toInt(), intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_CANCEL_CURRENT)
+        //cancel alarm??
+        manager = getSystemService(ALARM_SERVICE) as AlarmManager
+
+        manager!!.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis()+ 1000 * time,pintent!!)
+
+
+
+    }
+
+    override fun onDestroy() {
+        //Toast.makeText(this, "bgService stopped", Toast.LENGTH_LONG).show()
+        unregisterReceiver(broadcastReceiver)
+    }
+
+    override fun onCreate() {
+        // create IntentFilter
+        val intentFilter = IntentFilter("dev.nanid.notify")
+        //create and register receiver
+        broadcastReceiver = notiReceiver()
+        registerReceiver(broadcastReceiver, intentFilter)
+
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        //Toast.makeText(this, "bgService started", Toast.LENGTH_LONG).show()
+        if (Build.VERSION.SDK_INT >= 26) {
+            val channel = NotificationChannel(channelId , "hide Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            NotificationManagerCompat.from(this).createNotificationChannel(channel)
+        }
+
+        val builder = NotificationCompat.Builder(this, channelId)
+            .setSmallIcon(R.drawable.ic_launcher_foreground) //todo make notification icon
+            .setContentTitle("")
+            .setContentText("")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setOngoing(false)
+
+        val n: Notification = builder.build()
+
+        ServiceCompat.startForeground(this,34,n,FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        val notificationManager =
+            applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(34)
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        TODO("Not yet implemented")
+    }
+}
+
+// ------- receive Notification action service --------
 
 class bgService : Service() {
     var broadcastReceiver: BroadcastReceiver? = null
@@ -169,17 +273,37 @@ class bgService : Service() {
                     applicationContext.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancel(1234)
 
-            }else{
-                val startIntent = Intent()
-                startIntent.setClass(context,MainActivity::class.java)
-                startIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(startIntent)
+                if(!isAppRunning(context,"dev.nanid.selfcare")){
+                    startApp(context)
+                }
 
-                //Toast.makeText(context,"yay",Toast.LENGTH_SHORT).show()
-                stopSelf()
+            }else{
+                startApp(context)
             }
 
         }
+    }
+
+    private fun startApp(context: Context){
+        val startIntent = Intent()
+        startIntent.setClass(context,MainActivity::class.java)
+        startIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(startIntent)
+
+        //Toast.makeText(context,"yay",Toast.LENGTH_SHORT).show()
+        stopSelf()
+    }
+
+    private fun isAppRunning(context: Context, packageName: String): Boolean {
+        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        activityManager.runningAppProcesses?.apply {
+            for (processInfo in this) {
+                if (processInfo.processName == packageName) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     override fun onDestroy() {
@@ -217,7 +341,7 @@ class bgService : Service() {
 
     private fun createNotification(notificationTitel: String,notificationContent: String): Notification {
         if (Build.VERSION.SDK_INT >= 26) {
-            val channel = NotificationChannel(channelId , "coolChannel", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(channelId , "Dont hide Notifications", NotificationManager.IMPORTANCE_DEFAULT)
             NotificationManagerCompat.from(this).createNotificationChannel(channel)
         }
 

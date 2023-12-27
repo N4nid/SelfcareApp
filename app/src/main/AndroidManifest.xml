@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM"/>
+
 
     <application
         android:allowBackup="true"
@@ -33,6 +35,15 @@
             android:foregroundServiceType="specialUse">
             <property android:name="dev.nanid.selfcare.bgService"
                 android:value="need it to run bg service with notification, so the broadcast receiver can receiver intents from notification and act accordingly"/>
+        </service>
+
+        <service
+            android:name=".notiService"
+            android:exported="true"
+            android:process=":ServiceProcess"
+            android:foregroundServiceType="specialUse">
+            <property android:name="dev.nanid.selfcare.notiService"
+                android:value="need it to run in bg, so the broadcast receiver can receiver intents from alarm manager and act accordingly"/>
         </service>
     </application>
 </manifest>

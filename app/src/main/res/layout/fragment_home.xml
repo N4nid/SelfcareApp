@@ -7,19 +7,22 @@
     android:theme="@style/Theme.Material3.Dark"
     tools:context=".ui.home.HomeFragment">
 
-    <Button
-        android:id="@+id/button"
-        android:layout_width="154dp"
-        android:layout_height="48dp"
-        android:text="Mood :3"
-        android:textSize="18sp"
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="365dp"
+        android:layout_height="52dp"
+        android:layout_margin="10dp"
+        android:background="@drawable/top_rounded"
+        android:backgroundTint="?attr/colorOnPrimaryFixed"
+        android:backgroundTintMode="add"
+        android:padding="10dp"
+        android:text="@string/app_name"
+        android:textSize="24sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.073"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.023"
-        app:rippleColor="?attr/colorOnPrimary" />
+        app:layout_constraintVertical_bias="0.075" />
 
     <TextView
         android:id="@+id/tvBody"
@@ -35,24 +38,6 @@
         app:layout_constraintStart_toStartOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvTitle"
         app:layout_constraintVertical_bias="0.0" />
-
-    <TextView
-        android:id="@+id/tvTitle"
-        android:layout_width="365dp"
-        android:layout_height="52dp"
-        android:layout_margin="10dp"
-        android:background="@drawable/top_rounded"
-        android:backgroundTint="?attr/colorOnPrimaryFixed"
-        android:backgroundTintMode="add"
-        android:padding="10dp"
-        android:text="@string/app_name"
-        android:textSize="24sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.347"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.132" />
 
     <EditText
         android:id="@+id/textfield"
@@ -71,11 +56,10 @@
         android:inputType="textMultiLine"
         android:padding="12dp"
         android:textSize="20sp"
+        app:layout_constrainedHeight="true"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="400dp"
-        app:layout_constraintHorizontal_bias="0.413"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/tvTitle"
+        app:layout_constraintStart_toStartOf="@+id/tvTitle"
         app:layout_constraintTop_toBottomOf="@+id/tvBody"
         app:layout_constraintVertical_bias="1.0" />
 
@@ -90,7 +74,21 @@
         app:layout_constraintEnd_toEndOf="@+id/textfield"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/textfield"
-        app:layout_constraintTop_toBottomOf="@+id/tvBody"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mood :3"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@+id/textfield"
+        app:layout_constraintEnd_toEndOf="@+id/textfield"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/textfield"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.99"
+        app:rippleColor="?attr/colorOnPrimary" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

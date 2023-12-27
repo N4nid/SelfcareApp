@@ -1,26 +1,29 @@
 package dev.nanid.selfcare.ui.notifications
 
-import android.app.AlarmManager
-import android.app.PendingIntent
-import android.content.BroadcastReceiver
+
 import android.content.Context
-import android.content.Context.ALARM_SERVICE
 import android.content.Intent
-import android.content.IntentFilter
-import android.graphics.Color
+import android.content.SharedPreferences
+
 import android.os.Bundle
-import android.os.SystemClock
+import android.util.Log
+
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
+import android.widget.Switch
 import android.widget.Toast
-import androidx.core.content.ContextCompat.registerReceiver
+import android.widget.ToggleButton
+
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import dev.nanid.selfcare.MainActivity
 import dev.nanid.selfcare.R
+
 import dev.nanid.selfcare.databinding.FragmentNotificationsBinding
+import java.lang.Exception
 
 
 class NotificationsFragment : Fragment() {
@@ -41,10 +44,71 @@ class NotificationsFragment : Fragment() {
         val root: View = binding.root
 
 
-        val btn = root.findViewById<Button>(R.id.test)
-        btn.setOnClickListener {
-            (activity as MainActivity).SetAlarm()
+        val amount = root.findViewById<EditText>(R.id.editTextNumber2)
+        val remindSwitcher = root.findViewById<Button>(R.id.button2)
+
+        val sharedPreferences = requireActivity().getSharedPreferences("settings", Context.MODE_PRIVATE)
+        var reminding = false
+
+        try {
+            reminding = sharedPreferences.getBoolean("reminding",false)
+            var time = sharedPreferences.getInt("time",-1)
+            amount.setText(time.toString())
+            if (time == -1)amount.setText("")
+
+            if(reminding){
+                remindSwitcher.setText("Stop reminding")
+            }else{
+                remindSwitcher.setText("Start reminding")
+            }
+
+        }catch (e: Exception){
+            remindSwitcher.setText("Stop reminding")
+            Log.wtf("y00oo..",e)
         }
+
+
+
+        remindSwitcher.setOnClickListener {
+            //val editor = sharedPreferences.edit()
+            if (reminding){
+                remindSwitcher.setText("Start reminding")
+                val editor = sharedPreferences.edit()
+                //editor.remove("nInput")
+                editor.putBoolean("reminding",false)
+                editor.apply()
+
+                var intent = Intent("dev.nanid.notify")
+                intent.putExtra("stop",true)
+                //intent.putExtra("repeating",repeating)
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                (activity as MainActivity).sendBroadcast(intent)
+
+                Toast.makeText(context,"stopped",Toast.LENGTH_SHORT).show()
+            }else{
+                val time:Int
+
+                try {
+                    time = amount.text.toString().toInt()
+
+                    remindSwitcher.setText("Stop reminding")
+                    val editor = sharedPreferences.edit()
+                    editor.putInt("time",time)
+                    editor.putBoolean("reminding", true)
+                    editor.apply()
+
+                    var intent = Intent("dev.nanid.notify")
+                    intent.putExtra("alarm",time)
+                    //intent.putExtra("repeating",repeating)
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    (activity as MainActivity).sendBroadcast(intent)
+
+                }catch (e:Exception){
+                    Toast.makeText(context,"input time",Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
 
         return root
     }
