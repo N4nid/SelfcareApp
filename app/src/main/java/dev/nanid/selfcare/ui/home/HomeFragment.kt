@@ -48,7 +48,7 @@ class HomeFragment : Fragment() {
         val intentFilter = IntentFilter("dev.nanid.moodAction")
         //create and register receiver
         broadcastReceiver = updateReceiver()
-        (activity as MainActivity).registerReceiver(broadcastReceiver, intentFilter, Service.RECEIVER_NOT_EXPORTED)
+        (activity as MainActivity).registerReceiver(broadcastReceiver, intentFilter, Service.RECEIVER_EXPORTED)
 
         return root!!
     }

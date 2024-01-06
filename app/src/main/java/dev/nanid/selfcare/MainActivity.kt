@@ -128,7 +128,6 @@ class MainActivity : AppCompatActivity() {
 
     //----------- own shit from here ----------
 
-
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == 101) {
@@ -189,6 +188,9 @@ class notiService : Service() {
                 startService(service)
                 SetAlarm(intent.getIntExtra("time",1),intent.getBooleanExtra("type",false))
 
+            }else if(intent.hasExtra("stopService")){
+                stopAlarm()
+                stopSelf()
             }
 
         }
@@ -198,6 +200,7 @@ class notiService : Service() {
         try {
             manager!!.cancel(pintent!!)
             pintent!!.cancel()
+
         }catch (e:Exception){
 
         }
@@ -216,12 +219,12 @@ class notiService : Service() {
 
         var interval: Long
         if(isDay) interval = AlarmManager.INTERVAL_DAY * time // //AlarmManager.INTERVAL_HOUR * time
-        else interval =  time.toLong() * AlarmManager.INTERVAL_HOUR//time.toLong() * 1000.toInt()//
+        else interval =  time.toLong() *  AlarmManager.INTERVAL_HOUR // //1000
         @RequiresApi(Build.VERSION_CODES.S)
         if(manager!!.canScheduleExactAlarms()){
-            manager!!.setExact(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis() + interval ,pintent!!)
+            manager!!.setExact(AlarmManager.RTC,  System.currentTimeMillis() + interval ,pintent!!)
         }else{
-            manager!!.set(AlarmManager.RTC_WAKEUP,  System.currentTimeMillis() + interval ,pintent!!)
+            manager!!.set(AlarmManager.RTC,  System.currentTimeMillis() + interval ,pintent!!)
             Toast.makeText(this,"inexact reminder",Toast.LENGTH_SHORT).show()
         }
 
@@ -237,26 +240,26 @@ class notiService : Service() {
         val intentFilter = IntentFilter("dev.nanid.notify")
         //create and register receiver
         broadcastReceiver = notiReceiver()
-        registerReceiver(broadcastReceiver, intentFilter,RECEIVER_NOT_EXPORTED)
+        registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
 
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         //Toast.makeText(this, "bgService started", Toast.LENGTH_LONG).show()
         if (Build.VERSION.SDK_INT >= 26) {
-            val channel = NotificationChannel(channelId , "Please hide Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(channelId , "useless Notifications", NotificationManager.IMPORTANCE_DEFAULT)
             NotificationManagerCompat.from(this).createNotificationChannel(channel)
         }
         val resultIntent = Intent("dev.nanid.moodAction")
         resultIntent.putExtra("useless","stuff")
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        val resultPendingIntent: PendingIntent? = PendingIntent.getBroadcast(this,System.currentTimeMillis().toInt(),resultIntent,PendingIntent.FLAG_IMMUTABLE);
+        val resultPendingIntent: PendingIntent? = PendingIntent.getActivity(this,System.currentTimeMillis().toInt(),resultIntent,PendingIntent.FLAG_IMMUTABLE);
 
 
         val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_notifications_black_24dp) //todo make notification iconC
+            .setSmallIcon(R.drawable.ic_notifications_black_24dp) //todo make notification icon
             .setContentTitle("Useless Notification")
-            .setContentText("")
+            .setContentText("disable me")
             .setContentIntent(resultPendingIntent)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setAutoCancel(true)
@@ -265,6 +268,15 @@ class notiService : Service() {
         val n: Notification = builder.build()
 
         ServiceCompat.startForeground(this,34,n,FOREGROUND_SERVICE_TYPE_SPECIAL_USE)
+        //Toast.makeText(this,intent?.getIntExtra("alarm",-1).toString(),Toast.LENGTH_SHORT).show()
+
+        if (intent?.hasExtra("alarm") == true && intent.hasExtra("type") == true){
+            var alarmIntent = Intent("dev.nanid.notify")
+            alarmIntent.putExtra("alarm",intent.getIntExtra("alarm",1))
+            alarmIntent.putExtra("type",intent.getBooleanExtra("type",false))
+            alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            sendBroadcast(alarmIntent)
+        }
 
         return START_STICKY
     }
@@ -279,12 +291,11 @@ class notiService : Service() {
 class bgService : Service() {
     var broadcastReceiver: BroadcastReceiver? = null
     private val channelId = "nanid.selfcare.notifications"
-    val moodUpdater = MutableLiveData<String>()
+
 
 
     inner class ActionReceiver: BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-
 
             if(intent.hasExtra("mood")){
                 val mood = intent.getStringExtra("mood")
@@ -344,7 +355,13 @@ class bgService : Service() {
         val intentFilter = IntentFilter("dev.nanid.moodAction")
         //create and register receiver
         broadcastReceiver = ActionReceiver()
-        registerReceiver(broadcastReceiver, intentFilter,RECEIVER_NOT_EXPORTED)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(broadcastReceiver, intentFilter, RECEIVER_EXPORTED)
+        }else{
+            registerReceiver(broadcastReceiver, intentFilter)
+        }
+        //android.os.Debug.waitForDebugger()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -359,25 +376,26 @@ class bgService : Service() {
         return START_STICKY
     }
 
-    private fun notificationAction(answer: String): PendingIntent? {
+    private fun notificationAction(answer: String): PendingIntent {
         val resultIntent = Intent("dev.nanid.moodAction")
         resultIntent.putExtra("mood",answer)
         resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        val resultPendingIntent: PendingIntent? = PendingIntent.getBroadcast(this,System.currentTimeMillis().toInt(),resultIntent,PendingIntent.FLAG_IMMUTABLE);
+
+        val resultPendingIntent: PendingIntent = PendingIntent.getBroadcast(this,System.currentTimeMillis().toInt(),resultIntent,PendingIntent.FLAG_IMMUTABLE);
 
         return resultPendingIntent
     }
 
     private fun createNotification(notificationTitel: String,notificationContent: String): Notification {
         if (Build.VERSION.SDK_INT >= 26) {
-            val channel = NotificationChannel(channelId , "Dont hide Notifications", NotificationManager.IMPORTANCE_DEFAULT)
+            val channel = NotificationChannel(channelId , "Mood Notifications", NotificationManager.IMPORTANCE_DEFAULT)
             NotificationManagerCompat.from(this).createNotificationChannel(channel)
         }
 
-        var moods = arrayOf(":)",":|",":(")
+        val moods = arrayOf(":)",":|",":(")
         var pIntents: Array<PendingIntent?> = emptyArray()
 
-        for (i in 0..2){
+        for (i in 0..moods.size-1){
             pIntents += notificationAction(moods[i])
         }
 
@@ -389,7 +407,7 @@ class bgService : Service() {
             .addAction(R.drawable.ic_dashboard_black_24dp,moods[0],pIntents[0])
             .addAction(R.drawable.ic_dashboard_black_24dp, moods[1],pIntents[1])
             .addAction(R.drawable.ic_dashboard_black_24dp, moods[2],pIntents[2])
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
 
 

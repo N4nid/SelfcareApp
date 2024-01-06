@@ -100,7 +100,7 @@ class NotificationsFragment : Fragment() {
                 editor.apply()
 
                 var intent = Intent("dev.nanid.notify")
-                intent.putExtra("stop",true)
+                intent.putExtra("stopService",true)
 
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 (activity as MainActivity).sendBroadcast(intent)
@@ -110,18 +110,20 @@ class NotificationsFragment : Fragment() {
                 val time:Int
 
                 try {
+                    time = amount.text.toString().toInt()
+                    if (time < 1) throw Exception("input to low")
+
                     if(! (activity as MainActivity).isMyServiceRunning(notiService::class.java)){ //TODO rename notiService and bgService to cause less confusion
                         val service = Intent(
                             context,
                             notiService::class.java
                         )
                         //Toast.makeText(context,"started",Toast.LENGTH_SHORT).show()
+                        service.putExtra("alarm",time)
+                        service.putExtra("type",intervalType.isChecked)
                         service.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         (activity as MainActivity).startService(service)
                     }
-
-                    time = amount.text.toString().toInt()
-                    if (time < 1) throw Exception("input to low")
 
 
                     val editor = sharedPreferences.edit()
@@ -132,6 +134,7 @@ class NotificationsFragment : Fragment() {
 
                     serviceUp = true
                     remindSwitcher.setText("Stop reminding")
+
                     var intent = Intent("dev.nanid.notify")
                     intent.putExtra("alarm",time)
                     intent.putExtra("type",intervalType.isChecked)
@@ -139,7 +142,7 @@ class NotificationsFragment : Fragment() {
                     (activity as MainActivity).sendBroadcast(intent)
 
                 }catch (e:Exception){
-                    Toast.makeText(context,e.toString(),Toast.LENGTH_SHORT).show() // change to "input time"
+                    Toast.makeText(context,"input time",Toast.LENGTH_SHORT).show() // change to "input time"
                 }
             }
         }

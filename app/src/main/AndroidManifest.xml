@@ -43,7 +43,7 @@
 
         <service
             android:name=".notiService"
-            android:exported="false"
+            android:exported="true"
             android:process=":ServiceProcess"
             android:foregroundServiceType="specialUse">
             <property android:name="dev.nanid.selfcare.notiService"
