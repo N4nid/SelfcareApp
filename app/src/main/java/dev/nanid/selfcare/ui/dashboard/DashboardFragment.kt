@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.components.AxisBase
+import com.github.mikephil.charting.components.MarkerImage
 import com.github.mikephil.charting.components.MarkerView
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -19,7 +20,9 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.utils.MPPointF
 import dev.nanid.selfcare.R
+import dev.nanid.selfcare.databinding.CustomMarkerLayoutBinding
 import dev.nanid.selfcare.databinding.FragmentDashboardBinding
+import dev.nanid.selfcare.databinding.MarkerLayoutBinding
 import java.text.DecimalFormat
 
 
@@ -79,23 +82,40 @@ class DashboardFragment : Fragment() {
 
     linedataset.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 
+    /*
+                  /   |
+  ______________//_   |
+ / ___         ___ \  |
+/ /   \       /   \ \ |
+\ \___/  \_/  \___/ / |
+ \_________________/  |
+ -- No entrys yet --  |
+
+:C not working since there is no mutliline support :C
+    */
 
     //We connect our data to the UI Screen
     val data = LineData(linedataset)
     val lc = binding.linechart
     lc.data = data
+    lc.setDrawMarkers(true)
+    lc.setNoDataText("no entrys yet")
 
     //Styling
     lc.setBackgroundColor(resources.getColor(R.color.inside_widget_bg))
     //lc.setBackgroundColor(resources.getColor(R.color.white))
     lc.animateXY(600, 300, Easing.EaseInCubic)
 
-    lc.data.setValueFormatter(MyValueFormatter())
+    if(lc.data != null)lc.data.setValueFormatter(MyValueFormatter())
     lc.isHighlightPerTapEnabled = true
     lc.xAxis.isEnabled = true
     lc.axisLeft.isEnabled = false
     lc.axisRight.isEnabled = false
-    lc.marker = CustomMarkerView(context,R.layout.marker_layout)
+
+    //val markerPop = context?.let { CustomMarkerView(it,R.layout.marker_layout) }
+    //val markerBind = markerPop?.let { CustomMarkerLayoutBinding.bind(it) }
+    //lc.marker = markerPop
+
 
   }
 
@@ -105,8 +125,10 @@ class DashboardFragment : Fragment() {
     private val tvContent: TextView
 
     init {
+
       // this markerview only displays a textview
       tvContent = findViewById<View>(R.id.tvContent) as TextView
+
     }
 
     // callbacks everytime the MarkerView is redrawn, can be used to update the
@@ -124,45 +146,6 @@ class DashboardFragment : Fragment() {
       // this will cause the marker-view to be above the selected value
       return -height
     }
-  }
-
-  interface IMarker {
-    /**
-     * @return The desired (general) offset you wish the IMarker to have on the x- and y-axis.
-     * By returning x: -(width / 2) you will center the IMarker horizontally.
-     * By returning y: -(height / 2) you will center the IMarker vertically.
-     */
-    val offset: MPPointF?
-
-    /**
-     * @return The offset for drawing at the specific `point`. This allows conditional adjusting of the Marker position.
-     * If you have no adjustments to make, return getOffset().
-     *
-     * @param posX This is the X position at which the marker wants to be drawn.
-     * You can adjust the offset conditionally based on this argument.
-     * @param posY This is the X position at which the marker wants to be drawn.
-     * You can adjust the offset conditionally based on this argument.
-     */
-    fun getOffsetForDrawingAtPos(posX: Float, posY: Float): MPPointF?
-
-    /**
-     * This method enables a specified custom IMarker to update it's content every time the IMarker is redrawn.
-     *
-     * @param e         The Entry the IMarker belongs to. This can also be any subclass of Entry, like BarEntry or
-     * CandleEntry, simply cast it at runtime.
-     * @param highlight The highlight object contains information about the highlighted value such as it's dataset-index, the
-     * selected range or stack-index (only stacked bar entries).
-     */
-    fun refreshContent(e: Entry?, highlight: Highlight?)
-
-    /**
-     * Draws the IMarker on the given position on the screen with the given Canvas object.
-     *
-     * @param canvas
-     * @param posX
-     * @param posY
-     */
-    fun draw(canvas: Canvas?, posX: Float, posY: Float)
   }
 
 
