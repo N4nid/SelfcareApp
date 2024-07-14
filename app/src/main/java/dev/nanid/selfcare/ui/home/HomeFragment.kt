@@ -17,18 +17,19 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import dev.nanid.selfcare.MainActivity
+import dev.nanid.selfcare.MoodData
 import dev.nanid.selfcare.R
 import dev.nanid.selfcare.bgService
 import dev.nanid.selfcare.databinding.FragmentHomeBinding
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.log
 
 class HomeFragment : Fragment() {
   var broadcastReceiver: BroadcastReceiver? = null
+  private val model: MoodData by viewModels()
   private var _binding: FragmentHomeBinding? = null
   var root: View? = null
 
@@ -45,7 +46,6 @@ class HomeFragment : Fragment() {
     val homeViewModel = ViewModelProvider(this).get(HomeViewModel::class.java)
 
     _binding = FragmentHomeBinding.inflate(inflater, container, false)
-
     root = binding.root
     val intentFilter = IntentFilter("dev.nanid.moodAction")
     // create and register receiver
@@ -61,7 +61,7 @@ class HomeFragment : Fragment() {
 
   inner class updateReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-      // Toast.makeText(context,"yayo",Toast.LENGTH_SHORT)
+      Toast.makeText(context, "yayo", Toast.LENGTH_SHORT)
 
       if (intent.hasExtra("mood")) {
         val mood = intent.getStringExtra("mood")
@@ -71,6 +71,7 @@ class HomeFragment : Fragment() {
         editor.putString("nInput", mood)
         editor.apply()
 
+        // log mood here?
         updateUi(mood.toString())
       }
     }
@@ -79,15 +80,15 @@ class HomeFragment : Fragment() {
   /*
   LOGGING CSV STRUCTUR
 
-  |date    |mood|log                 |
-  ------------------------------------
+  |date    |mood|
+  ---------------
   example:
 
-  |02.12.24|3   |today was a good day|
+  |02.12.24|3   |
 
    */
 
-  fun logMood(path: String, mood: String, log: String) {
+  fun logMood(path: String, mood: String) {
     val moodVal: Int
     val formatter = DateTimeFormatter.ofPattern("dd.MM.yy HH:mm")
     val date = LocalDateTime.now().format(formatter)
@@ -100,12 +101,7 @@ class HomeFragment : Fragment() {
     } else {
       moodVal = -1
     }
-    Toast.makeText(
-            context,
-            moodVal.toString() + "|" + log + "|" + date.toString(),
-            Toast.LENGTH_SHORT
-        )
-        .show()
+    Toast.makeText(context, moodVal.toString() + "|" + date.toString(), Toast.LENGTH_SHORT).show()
   }
 
   override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
@@ -119,13 +115,12 @@ class HomeFragment : Fragment() {
         val sharedPreference =
             requireActivity().getSharedPreferences("notification", Context.MODE_PRIVATE)
         val mood = sharedPreference.getString("nInput", "mood")
-        val txtField = root!!.findViewById<EditText>(R.id.textfield)
-        logMood(uri.path.toString(), mood.toString(), txtField.text.toString())
+        logMood(uri.path.toString(), mood.toString())
       }
     }
   }
 
-  fun updateUi(mood: String) {
+  public fun updateUi(mood: String) {
     val btn = root!!.findViewById<Button>(R.id.button)
     btn.setText("Mood " + mood)
 
@@ -172,15 +167,18 @@ class HomeFragment : Fragment() {
     super.onViewCreated(view, savedInstanceState)
     val sharedPreference =
         requireActivity().getSharedPreferences("notification", Context.MODE_PRIVATE)
-    val mood = sharedPreference.getString("nInput", "mood")
-    val root = view
-    updateUi(mood.toString())
-    val nameObserver =
-        Observer<String> { newMood ->
-          // Update the UI
-          updateUi(newMood)
-        }
 
+    var mood = arguments?.getString("mood")
+    // Toast.makeText(context, "arg" + mood, Toast.LENGTH_SHORT).show()
+    if (mood == null) {
+      mood = sharedPreference.getString("nInput", "meh")
+      // mood = "wow"
+      // Toast.makeText(context, "shrd " + mood, Toast.LENGTH_SHORT).show()
+    }
+
+    updateUi(mood.toString())
+
+    val root = view
     val logBtn = root.findViewById<Button>(R.id.save)
     val btn = root.findViewById<Button>(R.id.button)
     val tvBody = root.findViewById<TextView>(R.id.tvInfo)
@@ -203,7 +201,7 @@ class HomeFragment : Fragment() {
         startActivityForResult(intent, 69)
       } else {
         val txtField = root.findViewById<EditText>(R.id.textfield)
-        logMood(path, mood.toString(), txtField.text.toString())
+        logMood(path, mood.toString())
       }
     }
 

@@ -10,4 +10,5 @@
     <color name="bad">#E91E2F</color>
     <color name="mid">#FFEB3B</color>
     <color name="good">#60F19A</color>
+    <color name="inside_widget_bg">#222</color>
 </resources>
